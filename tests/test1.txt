@@ -1,0 +1,8 @@
+integer low, high, step;
+scan(low, high, step);
+while (low <= high)
+{
+    print(low);
+    low = low + 1;
+}
+endwhile

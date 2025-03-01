@@ -1,0 +1,26 @@
+COVER PAGE
+---------------------------------------------------------
+CS323 Programming Assignments – Compiler Project
+---------------------------------------------------------
+1. Names:
+   1. Salmaan Rauf           Section: 08
+   2. Shaikh Amin            Section: 08
+   3. Tasin Noor             Section: 08
+
+2. Assignment Number: 1
+
+3. Due Date: 03/02 (Sunday), 11:59 pm
+
+4. Submission Date: [3/01/2025]
+
+5. Executable File Name: lexer.py (or simply run via python)
+
+6. Test Case Files:
+   - Test 1: tests/test1.txt (Input) → output1.txt (Output)
+   - Test 2: tests/test2.txt (Input) → output2.txt (Output)
+   - Test 3: tests/test3.txt (Input) → output3.txt (Output)
+
+7. Operating System: MacOS
+
+---------------------------------------------------------
+Instructor Comments and Grade: [To be filled by instructor]

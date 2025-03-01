@@ -1,0 +1,26 @@
+integer fahr, cel, lower, upper, step;
+function convertx(fahr)
+{
+    return 5 * (fahr - 32) / 9;
+}
+scan(lower, upper, step);
+while (lower <= upper)
+{
+    print(lower);
+    print(convertx(lower));
+    lower = lower + step;
+}
+endwhile
+if (cel == 100)
+{
+    print(cel);
+}
+else
+{
+    cel = cel + 1;
+    print(cel);
+}
+endif
+a = 23;
+b = 45.67;
+c = 89;

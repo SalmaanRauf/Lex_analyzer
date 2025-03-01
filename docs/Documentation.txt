@@ -1,0 +1,45 @@
+CS323 Documentation – Lexical Analyzer for Rat25S
+
+Problem Statement:
+-------------------
+For this project, we had to build a lexical analyzer (lexer) for the Rat25S language.
+My lexer reads a Rat25S source file, breaks it down into tokens (like keywords, identifiers, 
+integers, reals, operators, and separators), and outputs each token with its type and
+lexeme. The program ignores comments (marked by [* and *]) and white spaces.
+
+How to Use Our Program:
+-------------------------
+1. Make sure you have Python 3.x installed
+2. Open a terminal in the project folder
+3. Run the program with a test file:
+       python src/main.py tests/test1.txt
+4. Check the output file ("output.txt") that shows all the tokens and lexemes
+5. You can also try tests/test2.txt and tests/test3.txt for more examples
+
+Design of Our Program:
+-------------------------
+We organized my project into different parts:
+
+A. Lexical Analyzer (lexer):
+   - We created a function lexer(source, index) that processes the source code starting at a 
+     given position and returns the next token plus the new position
+   - For identifiers, integers, and reals, We used DFSMs:
+       • Identifiers: Start with a letter, then can have letters, digits, or underscores
+         RE: [A-Za-z][A-Za-z0-9_]*
+       • Integers: Just a sequence of digits
+         RE: [0-9]+
+       • Reals: Digits, then a dot, then more digits
+         RE: [0-9]+\.[0-9]+
+     We first designed these as NFSMs using Thompson's construction, then converted them to
+     deterministic processes
+   - For other tokens (keywords, operators, separators), We used simpler logic
+   - My lexer returns a Token with the type and the actual lexeme
+
+B. Main Program:
+   - Reads the whole input file
+   - Loops through calling lexer() until it reaches the end
+   - Writes all tokens to "output.txt"
+
+C. Error Handling:
+   - When there's an invalid token (like a badly formatted real number), Our program reports
+     an error message
