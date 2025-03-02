@@ -25,6 +25,8 @@ How to Run:
 
 3. The program creates "output.txt" in the main folder.
    Check this file to see the tokens.
+   * Note *
+   "output.txt" will be overwritten each time you run the program.
 
 4. You can also try tests/test2.txt and tests/test3.txt for more examples.
 
@@ -33,5 +35,4 @@ About the Project:
 - This is our implementation of a lexical analyzer for the Rat25S language
 - We used a DFSM (Deterministic Finite State Machine) approach to recognize identifiers, integers, and real numbers
 - The main.py file has comments explaining how everything works
-- Make sure to keep the folders organized as shown above
 
