@@ -77,7 +77,7 @@ separator       )
 separator       {              
 keyword         return         
 identifier      value          
-operator        >=             
+operator        =>             
 real            100.0          
 separator       ;              
 separator       }              
