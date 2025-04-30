@@ -1,12 +1,13 @@
-integer a, b;
-a = 10;
-b = 20;
-if (a < b)
-{
-    print(a);
-}
-else
-{
-    print(b);
-}
-endif
+[* multi
+* line
+* comment *]
+$$
+integer a = 10 ;
+real r = 3.14 ;
+boolean ok ;
+ok = false ;
+if ( a <= 20 ) { r = r + 1.0 ; }
+else { r = r - 1.0 ; }
+print ( r ) ;
+### invalid@@
+$$

@@ -1,8 +1,7 @@
-integer low, high, step;
-scan(low, high, step);
-while (low <= high)
-{
-    print(low);
-    low = low + 1;
-}
-endwhile
+[* quick comment *]
+$$ function foo ( x integer , y real ) {
+boolean flag ;
+flag = true != false ;
+if ( flag ) { print ( y ) ; }
+$$ }
+@@@
