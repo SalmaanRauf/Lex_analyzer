@@ -19,6 +19,6 @@ while ( done = false ) {
 print ( total ) ;
 }
 $$ function helper ( value real ) {
-return value >= 100.0 ;
+return value => 100.0 ;
 }
 [* unterminated comment to trigger error
