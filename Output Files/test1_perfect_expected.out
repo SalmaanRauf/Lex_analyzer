@@ -1,0 +1,37 @@
+Token           Lexeme         
+------------------------------
+separator       $$             
+keyword         function       
+identifier      foo            
+separator       (              
+identifier      x              
+keyword         integer        
+separator       ,              
+identifier      y              
+keyword         real           
+separator       )              
+separator       {              
+keyword         boolean        
+identifier      flag           
+separator       ;              
+identifier      flag           
+operator        =              
+keyword         true           
+operator        !=             
+keyword         false          
+separator       ;              
+keyword         if             
+separator       (              
+identifier      flag           
+separator       )              
+separator       {              
+keyword         print          
+separator       (              
+identifier      y              
+separator       )              
+separator       ;              
+separator       }              
+separator       $$             
+separator       }              
+unknown         @@@            
+eof                            
