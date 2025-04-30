@@ -52,12 +52,11 @@ Other improvements vs original student submission
 ✓ Multi‑char tokens scanned before single‑char peers (<= >= == <> !=  $$)
 ✓ Clearer console usage / outfile formatting
 """
-
 import sys
 from dataclasses import dataclass
 from typing import Tuple, List, Optional
 
-# ───────────────────────── Token definitions ────────────────────────── #
+# ───────────────────────── Token‑set definitions ────────────────────────── #
 
 KEYWORDS = {
     "integer", "real", "boolean",
@@ -66,14 +65,13 @@ KEYWORDS = {
     "scan", "print", "true", "false",
 }
 
-# Multi‑char tokens *must* be matched first
-MULTI_CHAR_OPERATORS = {"<=", ">=", "==", "<>", "!="}
+# Multi‑char tokens *must* be matched first so "<=" isn’t split into "<" + "="
+MULTI_CHAR_OPERATORS = {"<=", ">=", "==", "<>", "!=", "=>"}  # added "=>"
 MULTI_CHAR_SEPARATORS = {"$$"}
 
 # Single‑char tokens
 SINGLE_CHAR_OPERATORS = {"=", "+", "-", "*", "/", "<", ">"}
-# '$' included so solitary '$' still tokenises (but $$ is matched earlier)
-SINGLE_CHAR_SEPARATORS = {"(", ")", "{", "}", ";", ",", "$"}
+SINGLE_CHAR_SEPARATORS = {"(", ")", "{", "}", ";", ",", "$"}  # include '$' for lonely '$'
 
 @dataclass
 class Token:
@@ -82,44 +80,50 @@ class Token:
     def __str__(self) -> str:
         return f"{self.kind:15s} {self.lexeme:15s}"
 
-# ─────────────────────── Helper & utility functions ──────────────────── #
+# ───────────────────────── Helper utilities ──────────────────────────── #
 
-def is_keyword(lex: str) -> bool:
-    """Identifier tokens are case‑insensitive per language spec."""
-    return lex.lower() in KEYWORDS
+def is_keyword(lexeme: str) -> bool:
+    """Identifiers are case‑insensitive per Rat25S spec."""
+    return lexeme.lower() in KEYWORDS
 
-# ───────────────────── Whitespace / comment skipper FSM ──────────────── #
+# ────────────────────── Comment‑skipper FSM (C0–C3) ───────────────────── #
 
 def skip_ws_and_comments(src: str, i: int) -> Tuple[int, Optional[Token]]:
-    """FSM C0‑C4 described in header docstring.  Returns new index and an
-    **error token** if we hit EOF inside a comment.
+    """
+    DFSM states:
+        C0 – idle (outside comment / in whitespace)  
+        C1 – saw '['  
+        C2 – inside body of comment  
+        C3 – just saw '*' inside comment (possible close)  
+    Any whitespace char is ignored in C0.  If EOF is hit while still in
+    states C2 or C3 we return an **unknown** token noting unterminated comment.
     """
     n = len(src)
-    while i < n:
+    while i < n:                                        # ----- C0 -----
         ch = src[i]
-        # ─── ordinary whitespace ─── #
+        # stay in C0 for whitespace
         if ch.isspace():
             i += 1
             continue
-        # ─── comment start? look for "[*" (state C0 → C1) ─── #
+        # transition C0→C1 if we see '[' and next char '*'
         if ch == '[' and i + 1 < n and src[i + 1] == '*':
-            i += 2  # consume "[*" ; now in state C2 (inside comment)
+            i += 2                                         # enter comment (C2)
             while i < n:
                 if src[i] == '*' and i + 1 < n and src[i + 1] == ']':
-                    i += 2  # consume "*]" — state C4, comment ends
+                    i += 2                                # C2/C3 → back to C0 (comment closed)
                     break
-                i += 1  # stay in C2 or C3
-            else:  # hit EOF before "*]"
+                i += 1                                    # remain in C2
+            else:  # reached EOF in C2 → error
                 return i, Token("unknown", "unterminated comment")
-            continue
-        # not whitespace / comment — return to main lexer
+            continue  # resume outer while‑loop (C0)
+        # saw non‑whitespace, non‑comment start → stop skipping
         break
     return i, None
 
 # ────────────────────────── Main lexer FSMs ──────────────────────────── #
 
 def lex_token(src: str, start: int) -> Tuple[Token, int]:
-    """Top‑level lexer that orchestrates the three DFSMs and literal tables."""
+    """Return next Token and new index starting at *start*."""
     idx, err_tok = skip_ws_and_comments(src, start)
     if err_tok:
         return err_tok, idx
@@ -128,71 +132,72 @@ def lex_token(src: str, start: int) -> Tuple[Token, int]:
 
     ch = src[idx]
 
-    # ───────────────── Identifier / Keyword FSM (S0‑S1) ───────────────── #
-    if ch.isalpha():
-        # S0 → letter
+    # ───────────── Identifier / Keyword FSM (S0‑S1) ────────────── #
+    # S0: start | S1: in‑identifier
+    if ch.isalpha():                        # S0‑‑letter→S1
         begin = idx
-        idx += 1  # we are now in S1
+        idx += 1
         while idx < len(src) and (src[idx].isalnum() or src[idx] == '_'):
-            idx += 1  # stay in S1
+            idx += 1                        # loop in S1
         lex = src[begin:idx]
         return Token("keyword" if is_keyword(lex) else "identifier", lex), idx
 
-    # ─────────────────── Integer / Real FSM (S0‑S3) ──────────────────── #
-    if ch.isdigit():
+    # ────────────── Integer / Real FSM (S0‑S3) ──────────────── #
+    # S0: start | S1: int body | S2: saw '.' | S3: fraction digits
+    if ch.isdigit():                        # S0‑‑digit→S1
         begin = idx
-        idx += 1  # S0→S1 saw first digit
+        idx += 1
         while idx < len(src) and src[idx].isdigit():
-            idx += 1  # stay in S1 (more digits)
+            idx += 1                        # stay S1
         is_real = False
-        # Possible transition S1 → S2 on '.'
         if idx < len(src) and src[idx] == '.' and (idx + 1) < len(src) and src[idx + 1].isdigit():
-            is_real = True
-            idx += 1  # consume '.' (now in S2)
+            is_real = True                  # S1‑‑'.'→S2, then S3
+            idx += 1  # consume '.' (S2)
             while idx < len(src) and src[idx].isdigit():
-                idx += 1  # S3 loop (real's fraction part)
+                idx += 1                    # stay S3 (fraction)
         lex = src[begin:idx]
         return Token("real" if is_real else "integer", lex), idx
 
-    # ─────────────────── Multi‑char operators & seps ──────────────────── #
-    for table, tkind in ((MULTI_CHAR_OPERATORS, "operator"),
-                         (MULTI_CHAR_SEPARATORS, "separator")):
+    # ─────────── Multi‑char operators / separators (tables) ──────────── #
+    for table, kind in ((MULTI_CHAR_OPERATORS, "operator"),
+                        (MULTI_CHAR_SEPARATORS, "separator")):
         for lit in table:
             if src.startswith(lit, idx):
-                return Token(tkind, lit), idx + len(lit)
+                return Token(kind, lit), idx + len(lit)
 
-    # ──────────────── Single‑char operators & seps ────────────────────── #
+    # ───────────── Single‑char operators / separators ────────────── #
     if ch in SINGLE_CHAR_OPERATORS:
         return Token("operator", ch), idx + 1
     if ch in SINGLE_CHAR_SEPARATORS:
         return Token("separator", ch), idx + 1
 
-    # ──────────────── Unknown / illegal token grouping ───────────────── #
-    begin = idx
+    # ─────────────── Unknown‑token grouping DFA ──────────────── #
+    begin = idx  # U0
     while idx < len(src):
+        # stop if whitespace or the next slice begins any *legal* token
         if src[idx].isspace():
             break
-        # stop if next slice starts a legal token (look‑ahead one char suffices)
         if (src[idx].isalpha() or src[idx].isdigit() or
             src.startswith("[*", idx) or
             any(src.startswith(m, idx) for m in MULTI_CHAR_OPERATORS | MULTI_CHAR_SEPARATORS) or
             src[idx] in SINGLE_CHAR_OPERATORS or src[idx] in SINGLE_CHAR_SEPARATORS):
             break
-        idx += 1
-    idx = max(idx, begin + 1)  # ensure progress
+        idx += 1  # stay in U1 (unknown)
+    idx = max(idx, begin + 1)
     return Token("unknown", src[begin:idx]), idx
 
 # ──────────────────── Convenience wrappers / driver ─────────────────── #
 
 def tokenize(text: str) -> List[Token]:
-    toks: List[Token] = []
+    tokens: List[Token] = []
     i = 0
     while True:
         tok, i = lex_token(text, i)
-        toks.append(tok)
+        tokens.append(tok)
         if tok.kind == "eof":
             break
-    return toks
+    return tokens
+
 
 def main() -> None:
     if len(sys.argv) != 2:
@@ -212,7 +217,7 @@ def main() -> None:
         out.write("-" * 30 + "\n")
         for t in toks:
             out.write(str(t) + "\n")
-    print("Lexical analysis complete → output.txt (", len(toks) - 1, "tokens )")
+    print(f"Lexical analysis complete → output.txt  ({len(toks) - 1} tokens)")
 
 if __name__ == "__main__":
     main()
