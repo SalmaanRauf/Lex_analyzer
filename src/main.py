@@ -5,16 +5,22 @@ CS323 • Assignment 1
 This file **implements three explicit deterministic finite‑state machines (DFSMs)** in
 Python code.  Each FSM is annotated so the grader can see exactly which *state* the
 code is in and why a transition fires.
-
-───────────────────────────────────────────────────────────────────────────────
-1️⃣  Identifier / Keyword FSM  (states S0‑S1)
+Identifier / Keyword FSM  (states S0‑S1)
 ───────────────────────────────────────────────────────────────────────────────
 S0  ── letter ─▶  **S1** ── (letter | digit | '_')* ──▶  **S1** (loop)
                                     ↑
                                     └─── accept identifier/keyword here
 
 ───────────────────────────────────────────────────────────────────────────────
-2️⃣  Integer / Real FSM  (states S0‑S3)
+Integer / Real FSM  (states S0‑S3)
+───────────────────────────────────────────────────────────────────────────────
+S0 ─ digit ─▶ **S1** ─ digit* ─▶ **S1** ─ '.' ─▶ **S2** ─ digit+ ─▶ **S3** (loop digits)
+                    ↑                                           ↑
+                    |———— accept **integer** here ————————|    |—— accept **real** here ——|
+                                    └─── accept identifier/keyword here
+
+───────────────────────────────────────────────────────────────────────────────
+ Integer / Real FSM  (states S0‑S3)
 ───────────────────────────────────────────────────────────────────────────────
 S0 ─ digit ─▶ **S1** ─ digit* ─▶ **S1** ─ '.' ─▶ **S2** ─ digit+ ─▶ **S3** (loop digits)
                     ↑                                           ↑
@@ -23,7 +29,7 @@ S0 ─ digit ─▶ **S1** ─ digit* ─▶ **S1** ─ '.' ─▶ **S2** ─ di
 (We purposely reject malformed forms like `123.` or `.45` to match the spec.)
 
 ───────────────────────────────────────────────────────────────────────────────
-3️⃣  Comment skipper FSM  (states C0‑C3, non‑token‑producing)
+Comment skipper FSM  (states C0‑C3, non‑token‑producing)
 ───────────────────────────────────────────────────────────────────────────────
 C0 ─ "[" →
 C1 ─ "*" →
